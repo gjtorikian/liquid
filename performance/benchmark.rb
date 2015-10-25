@@ -1,3 +1,4 @@
+require 'benchmark'
 require 'benchmark/ips'
 require_relative 'theme_runner'
 
@@ -13,5 +14,6 @@ Benchmark.ips do |x|
   puts
 
   x.report("parse:") { profiler.compile }
-  x.report("parse & run:") { profiler.run }
+  x.report("parse & run with strings:") { profiler.run }
+  x.report("parse & run with symbols:") { profiler.run(as_symbols: true) }
 end

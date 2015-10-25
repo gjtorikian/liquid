@@ -44,27 +44,38 @@ class ThemeRunner
     end
   end
 
-  def run
+  def run(as_symbols: false)
     # Dup assigns because will make some changes to them
     assigns = Database.tables.dup
 
     @tests.each do |liquid, layout, template_name|
       # Compute page_tempalte outside of profiler run, uninteresting to profiler
       page_template = File.basename(template_name, File.extname(template_name))
-      compile_and_render(liquid, layout, assigns, page_template, template_name)
+      compile_and_render(liquid, layout, assigns, page_template, template_name, as_symbols)
     end
   end
 
-  def compile_and_render(template, layout, assigns, page_template, template_file)
+  def compile_and_render(template, layout, assigns, page_template, template_file, as_symbols)
     tmpl = Liquid::Template.new
-    tmpl.assigns['page_title'] = 'Page title'
-    tmpl.assigns['template'] = page_template
+
+    if as_symbols
+      tmpl.assigns['page_title'] = 'Page title'
+      tmpl.assigns['template'] = page_template
+    else
+      tmpl.assigns[:page_title] = 'Page title'
+      tmpl.assigns[:template] = page_template
+    end
+
     tmpl.registers[:file_system] = ThemeRunner::FileSystem.new(File.dirname(template_file))
 
     content_for_layout = tmpl.parse(template).render!(assigns)
 
     if layout
-      assigns['content_for_layout'] = content_for_layout
+      if as_symbols
+        assigns[:content_for_layout] = content_for_layout
+      else
+        assigns['content_for_layout'] = content_for_layout
+      end
       tmpl.parse(layout).render!(assigns)
     else
       content_for_layout
