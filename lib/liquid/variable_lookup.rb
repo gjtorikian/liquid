@@ -10,6 +10,7 @@ module Liquid
     end
 
     def initialize(markup)
+      markup = markup.to_s unless markup.is_a?(String)
       lookups = markup.scan(VariableParser)
 
       name = lookups.shift

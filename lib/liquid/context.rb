@@ -153,6 +153,7 @@ module Liquid
         @this_stack_used = true
         push({})
       end
+      key = key.to_s unless key.is_a?(String)
       @scopes[0][key] = value
     end
 
@@ -165,6 +166,7 @@ module Liquid
     # Example:
     #   products == empty #=> products.empty?
     def [](expression)
+      expression = expression.to_s unless expression.is_a?(String)
       evaluate(Expression.parse(expression))
     end
 
@@ -205,7 +207,8 @@ module Liquid
     end
 
     def lookup_and_evaluate(obj, key)
-      if (value = obj[key]).is_a?(Proc) && obj.respond_to?(:[]=)
+      value = lookup_value(obj, key)
+      if value.is_a?(Proc) && obj.respond_to?(:[]=)
         obj[key] = (value.arity == 0) ? value.call : value.call(self)
       else
         value
@@ -213,6 +216,13 @@ module Liquid
     end
 
     private
+
+    def lookup_value(obj, key)
+      return nil if key.nil?
+      value = obj[key]
+      value = obj[key.to_sym] if value.nil?
+      value
+    end
 
     def squash_instance_assigns_with_environments
       @scopes.last.each_key do |k|
